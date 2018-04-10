@@ -1,0 +1,192 @@
+---
+title: "pqhs 471 hw"
+author: "Andrew Shan"
+date: "4/9/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations.
+
+```{r}
+library(ISLR)
+set.seed(471)
+train = sample(dim(OJ)[1], 800)
+OJ.train = OJ[train, ]
+OJ.test = OJ[-train, ]
+```
+
+# Fit a support vector classifier to the training data using $cost$ = 0.01, with $Purchase$ as the response and the other variables as predictors. Use the summary() function to produce summary statistics, and describe the results obtained.
+
+```{r}
+library(e1071)
+svm.linear <- svm(Purchase ~ ., data = OJ.train, kernel = "linear", cost = 0.01)
+summary(svm.linear)
+```
+
+Support vector classifier creates 438 support vectors out of 800 training points. Out of these, 219 belong to level CH and remaining 219 belong to level MM.
+
+# What are the training and test error rates ?
+
+```{r}
+train.pred <- predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+```
+
+```{r}
+(76 + 59)/ ( 423+59+76+242)
+```
+
+The training error rate is 0.1688.
+
+```{r}
+test.pred <- predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+
+```{r}
+(29+18)/(153+18+29+70)
+```
+
+The testing error rate is 0.1741.
+
+# Use the tune() function to select an optimal $cost$. Consider values in the range 0.01 to 10.
+
+```{r}
+set.seed(1)
+tune.out = tune(svm, Purchase ~ ., data = OJ.train, kernel = "linear", ranges = list(cost = 10^seq(-2, 
+    1, by = 0.25)))
+summary(tune.out)
+```
+
+Tuning shows that optimal cost is 3.162278.
+
+# Compute the training and test error rates using this new value for $cost$.
+
+```{r}
+svm.linear <- svm(Purchase ~ ., kernel = "linear", data = OJ.train, cost = tune.out$best.parameter$cost)
+train.pred <- predict(svm.linear, OJ.train)
+table(OJ.train$Purchase, train.pred)
+```
+
+```{r}
+(73+56)/(426 + 56+ 73+245)
+```
+
+The training error rate is now 16.13%
+
+```{r}
+test.pred <- predict(svm.linear, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+```{r}
+(27+20)/(151+20+27+72)
+```
+ 
+The test error rate is 17.41%.
+
+# Repeat parts (b) through (e) using a support vector machine with a radial kernel. Use the default value for $gamma$.
+
+```{r}
+svm.radial <- svm(Purchase ~ ., kernel = "radial", data = OJ.train)
+summary(svm.radial)
+```
+
+```{r}
+train.pred <- predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+test.pred <- predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+
+```{r}
+(78+41)/(441+41+78+240)
+(35+16)/(155+16+35+64)
+```
+
+With default gamma, clarifies creates 369 support vectors, out of which, 186 belong to level CH and remaining 183 belong to level MM. The classifier has a training error of 14.88% and a test error of 18.89%.
+
+```{r}
+set.seed(2)
+tune.out <- tune(svm, Purchase ~ ., data = OJ.train, kernel = "radial", ranges = list(cost = 10^seq(-2, 
+    1, by = 0.25)))
+summary(tune.out)
+```
+
+Tuning shows that optimal cost is 0.165.
+
+```{r}
+svm.radial <- svm(Purchase ~ ., kernel = "radial", data = OJ.train, cost = tune.out$best.parameter$cost)
+summary(svm.radial)
+```
+
+```{r}
+train.pred <- predict(svm.radial, OJ.train)
+table(OJ.train$Purchase, train.pred)
+test.pred <- predict(svm.radial, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+
+```{r}
+(78+41)/(441+41+78+240)
+(35+16)/(155+16+35+64)
+```
+
+The classifier has a training error of 14.88% and a test error of 18.89%.
+
+# Repeat parts (b) through (e) using a support vector machine with a polynomial kernel. Set $degree$ = 2.
+
+```{r}
+svm.poly <- svm(Purchase ~ ., kernel = "polynomial", data = OJ.train, degree = 2)
+summary(svm.poly)
+```
+
+```{r}
+train.pred <- predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+test.pred <- predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+
+```{r}
+(109+33)/(449+33+109+209)
+(44+13)/(158+13+44+55)
+```
+
+With polynomial kernel degree=2, classifier creates 453 support vectors, out of which, 231 belong to level CH and remaining 222 belong to level MM. The classifier has a training error of 17.75% and a test error of 21.11%.
+
+```{r}
+set.seed(3)
+tune.out <- tune(svm, Purchase ~ ., data = OJ.train, kernel = "polynomial", degree = 2, ranges = list(cost = 10^seq(-2, 
+    1, by = 0.25)))
+summary(tune.out)
+```
+
+Tuning shows that optimal cost is 0.17375.
+
+```{r}
+svm.poly <- svm(Purchase ~ ., kernel = "polynomial", degree = 2, data = OJ.train, cost = tune.out$best.parameter$cost)
+summary(svm.poly)
+```
+```{r}
+train.pred <- predict(svm.poly, OJ.train)
+table(OJ.train$Purchase, train.pred)
+test.pred <- predict(svm.poly, OJ.test)
+table(OJ.test$Purchase, test.pred)
+```
+
+```{r}
+(90+34)/(448+34+90+228)
+(39+12)/(159+12+39+60)
+```
+
+The classifier has a training error of 15.50% and a test error of 18.89%.
+
+# Overall
+
+The default gamma approach provides the best results on this data. 
